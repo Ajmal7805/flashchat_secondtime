@@ -1,4 +1,12 @@
+// ignore_for_file: prefer_const_constructors
+
+import 'dart:developer';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flashchat_secondtime/const.dart';
+import 'package:flashchat_secondtime/screens/chatscreen.dart';
+import 'package:flashchat_secondtime/screens/welcomescreen.dart';
 import 'package:flutter/material.dart';
+import 'package:modal_progress_hud_nsn/modal_progress_hud_nsn.dart';
 
 class Loginscreen extends StatefulWidget {
   const Loginscreen({super.key});
@@ -8,6 +16,10 @@ class Loginscreen extends StatefulWidget {
 }
 
 class _LoginscreenState extends State<Loginscreen> {
+  String? email;
+  String? password;
+  bool spinner = false;
+  final auth = FirebaseAuth.instance;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -16,93 +28,77 @@ class _LoginscreenState extends State<Loginscreen> {
         backgroundColor: Colors.white,
         elevation: 0,
       ),
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: <Widget>[
-            Hero(
-              tag: 'logo',
-              child: Container(
-                height: 200.0,
-                child: Image.asset('images/logo.png'),
-              ),
-            ),
-            const SizedBox(
-              height: 48.0,
-            ),
-            TextField(
-              onChanged: (value) {
-                //Do something with the user input.
-              },
-              decoration: const InputDecoration(
-                hintText: 'Enter your email',
-                contentPadding:
-                    EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(32.0)),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderSide:
-                      BorderSide(color: Colors.lightBlueAccent, width: 1.0),
-                  borderRadius: BorderRadius.all(Radius.circular(32.0)),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderSide:
-                      BorderSide(color: Colors.lightBlueAccent, width: 2.0),
-                  borderRadius: BorderRadius.all(Radius.circular(32.0)),
+      body: ModalProgressHUD(
+        inAsyncCall: spinner,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
+              Hero(
+                tag: 'logo',
+                child: Container(
+                  height: 150.0,
+                  child: Image.asset('images/logo.png'),
                 ),
               ),
-            ),
-            const SizedBox(
-              height: 8.0,
-            ),
-            TextField(
-              onChanged: (value) {
-                //Do something with the user input.
-              },
-              decoration: const InputDecoration(
-                hintText: 'Enter your password.',
-                contentPadding:
-                    EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(32.0)),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderSide:
-                      BorderSide(color: Colors.lightBlueAccent, width: 1.0),
-                  borderRadius: BorderRadius.all(Radius.circular(32.0)),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderSide:
-                      BorderSide(color: Colors.lightBlueAccent, width: 2.0),
-                  borderRadius: BorderRadius.all(Radius.circular(32.0)),
-                ),
+              const SizedBox(
+                height: 48.0,
               ),
-            ),
-            const SizedBox(
-              height: 24.0,
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 16.0),
-              child: Material(
-                color: Colors.lightBlueAccent,
-                borderRadius: const BorderRadius.all(Radius.circular(30.0)),
-                elevation: 5.0,
-                child: MaterialButton(
-                  onPressed: () {
-                    //Implement login functionality.
+              TextField(
+                  onChanged: (value) {
+                    email = value;
                   },
-                  minWidth: 200.0,
-                  height: 42.0,
-                  child: const Text(
-                    'Log In',
-                  ),
-                ),
+                  keyboardType: TextInputType.emailAddress,
+                  textAlign: TextAlign.center,
+                  decoration: textfielddecoration.copyWith(
+                      hintText: 'Enter Your Username')),
+              const SizedBox(
+                height: 8.0,
               ),
-            ),
-          ],
+              TextField(
+                  onChanged: (value) {
+                    password = value;
+                  },
+                  keyboardType: TextInputType.number,
+                  obscureText: true,
+                  textAlign: TextAlign.center,
+                  decoration: textfielddecoration.copyWith(
+                      hintText: 'Enter Your Password')),
+              const SizedBox(
+                height: 24.0,
+              ),
+              materialbuttonmodal(
+                  textcolor: Colors.white,
+                  loginorsighup: "Log in",
+                  navigatorfunction: () async {
+                    setState(() {
+                      spinner = true;
+                    });
+                    try {
+                      final olduser = await auth.signInWithEmailAndPassword(
+                          email: email.toString(),
+                          password: password.toString());
+                      if (olduser != null) {
+                        if (mounted) {
+                          Navigator.push(context, MaterialPageRoute(
+                            builder: (context) {
+                              return Chatscreen();
+                            },
+                          ));
+                        }
+                      }
+                      setState(() {
+                        spinner = false;
+                      });
+                    } on Exception catch (e) {
+                      log(e.toString());
+                    }
+                  },
+                  colors: Colors.lightBlueAccent),
+            ],
+          ),
         ),
       ),
     );
